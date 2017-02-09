@@ -93,7 +93,6 @@ int main()
 	while (!done)
 	{
 		// Wait to receive a message from the remote computer
-
 		cout << "\n\t--WAIT--\n\n";
 		int vRecv = recv(acceptSocket, recvMessage, STRLEN, 0);
 		if (vRecv > 0)
@@ -156,10 +155,19 @@ int main()
 					return 1;
 				}
 			}
+			recv(acceptSocket, recvMessage, strlen(recvMessage), 0);
+			if ((int)recvMessage[0] == 2)
+			{
+				cout << "Sending updated version " << serverVersion << " to client\n";
+				ifstream dataFile;
+				openInputFile(dataFile, FILENAME);
+
+				 
+			}
 		}
 		else if (vRecv == 0)
 		{
-			cout << "Closing closed\n";
+			cout << "Closing connection\n";
 			cleanup(acceptSocket);
 			return 0;
 		}
