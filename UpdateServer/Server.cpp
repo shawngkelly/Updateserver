@@ -19,11 +19,15 @@ void cleanup(SOCKET socket);
 // Returns the version number from the data file
 int getLocalVersion();
 
+void readData(int& num1, int& num2, int& num3);
+
 int main()
 {	
 	//Update vars
 	int			serverVersion;
-
+	int num1 = 0;
+	int num2 = 0;
+	int num3 = 0;
 	//Connection vars
 	WSADATA		wsaData;
 	SOCKET		listenSocket;
@@ -161,8 +165,10 @@ int main()
 				cout << "Sending updated version " << serverVersion << " to client\n";
 				ifstream dataFile;
 				openInputFile(dataFile, FILENAME);
-
-				 
+				readData(num1, num2, num3);
+				
+				
+				
 			}
 		}
 		else if (vRecv == 0)
@@ -193,17 +199,17 @@ int getLocalVersion()
 	return version;
 }
 
-void readData(int& num1, int& num2)
+void readData(int& num1, int& num2, int& num3)
 {
 	ifstream dataFile;
 	openInputFile(dataFile, FILENAME);
 
 	// Read the version number and discard it
-	int tmp = num1 = readInt(dataFile);
+	   num1 = readInt(dataFile);
 
 	// Read the two data values
-	num1 = readInt(dataFile);
 	num2 = readInt(dataFile);
+	num3= readInt(dataFile);
 
 	dataFile.close();
 }
