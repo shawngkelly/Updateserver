@@ -22,7 +22,7 @@ int getLocalVersion();
 void readData(int& num1, int& num2, int& num3);
 
 int main()
-{	
+{
 	//Update vars
 	int			serverVersion;
 	int num1 = 0;
@@ -33,11 +33,9 @@ int main()
 	SOCKET		listenSocket;
 	SOCKET		acceptSocket;
 	SOCKADDR_IN	serverAddr;
-	int			port;
-	char		sendMessage[STRLEN];
-	char		recvMessage[STRLEN];
+	int		recvMessage;
 	bool		done = false;
-
+	int         requests =0;
 	//Server checks local version number
 	serverVersion = getLocalVersion();
 
@@ -82,111 +80,72 @@ int main()
 		return 1;
 	}
 
-	cout << "\nWaiting for connections...\n";
-
-	// Accept incoming connection.  Program pauses here until
-	// a connection arrives.
-	acceptSocket = accept(listenSocket, NULL, NULL);
-
-	// For this program, the listen socket is no longer needed so it will be closed
-	closesocket(listenSocket);
-
-	cout << "Connected...\n\n";
-
+	cout << "Update server is up and running. \n\n";
+	cout << "Current version available is " << serverVersion << "\n\n";
+	cout << " " << requests << " requests have been made. \n\n";
 	
+
 	while (!done)
 	{
+
+		cout << "Waiting for incoming requests. \n\n";
+		// Accept incoming connection.  Program pauses here until
+		// a connection arrives.
+		acceptSocket = accept(listenSocket, NULL, NULL);
+		cout << "Connected to client. \n\n";
+		
 		// Wait to receive a message from the remote computer
+
 		cout << "\n\t--WAIT--\n\n";
-		int vRecv = recv(acceptSocket, recvMessage, STRLEN, 0);
-		if (vRecv > 0)
+		int vRecv = recv(acceptSocket, (char*)&recvMessage, sizeof((char*)&recvMessage), 0);
+		
+		if (recvMessage == QUERY)
 		{
-			recvMessage[vRecv] = '\0';
-			if ((int)recvMessage[0] == 1)
+			cout << "Client is requesting server version.\n\n";
+			cout << "Sending version number now\n\n";
+
+			int iSend = send(acceptSocket, (char*)&serverVersion, sizeof((char*)&serverVersion), 0);
+
+			cout << "Closing socket--Waiting for new request\n\n";
+
+			//Closes socket, then reopnes socket to listen for new connections
+
+			closesocket(acceptSocket);
+		}
+		if (recvMessage == 2)
+		{
+			cout << "Client has outdate version.\n\n";
+			cout << "Sending  version " << serverVersion << " to client\n\n";
+			ifstream dataFile;
+			openInputFile(dataFile, FILENAME);
+			readData(num1, num2, num3);
+			int sendNum1 = send(acceptSocket, (char*)&num1, sizeof((char*)&num1), 0);
+			int sendNum2 = send(acceptSocket, (char*)&num2, sizeof((char*)&num2), 0);
+			int sendNum3 = send(acceptSocket, (char*)&num3, sizeof((char*)&num3), 0);
+			if ((sendNum1 || sendNum2 || sendNum3) == SOCKET_ERROR)
 			{
-				cout << "Client is requesting server version.\n\n";
-				cout << "Latest Version is " << serverVersion << "\n\n";
-				cout << "Sending version number now\n";
-				int iSend = send(acceptSocket, (char*)&serverVersion, strlen((char*)&serverVersion), 0);
-
-				cout << "Closing socket--Waiting for new request\n\n";
-
-				//Closes socket, then reopnes socket to listen for new connections
-
-				closesocket(acceptSocket);
-
-				// Create a new socket to listen for client connections
-				listenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-
-				if (listenSocket == INVALID_SOCKET)
-				{
-					cerr << "ERROR: Cannot create socket\n";
-					WSACleanup();
-					return 1;
-				}
-
-				// Attempt to bind to the port.
-				if (bind(listenSocket, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
-				{
-					cerr << "ERROR: Cannot bind to port\n";
-					cleanup(listenSocket);
-					return 1;
-				}
-
-				// Start listening for incoming connections
-				if (listen(listenSocket, 1) == SOCKET_ERROR)
-				{
-					cerr << "ERROR: Problem with listening on socket\n";
-					cleanup(listenSocket);
-					return 1;
-				}
-
-				cout << "\nWaiting for connections...\n";
-
-				// Accept incoming connection.  Program pauses here until
-				// a connection arrives.
-				acceptSocket = accept(listenSocket, NULL, NULL);
-
-				// For this program, the listen socket is no longer needed so it will be closed
-				closesocket(listenSocket);
-
-				cout << "Connected...\n\n";
-
-				if (iSend == SOCKET_ERROR)
-				{
-					cerr << "ERROR: Failed to send message\n";
-					cleanup(acceptSocket);
-					return 1;
-				}
+				cerr << "ERROR: FAILED TO SEND UPDATE\n";
+				cleanup(acceptSocket);
 			}
-			recv(acceptSocket, recvMessage, strlen(recvMessage), 0);
-			if ((int)recvMessage[0] == 2)
+			else
 			{
-				cout << "Sending updated version " << serverVersion << " to client\n";
-				ifstream dataFile;
-				openInputFile(dataFile, FILENAME);
-				readData(num1, num2, num3);
-				
-				
-				
+				cout << "Data transmitted successfully\n\n";
 			}
+			cout << "Closing socket--Waiting for new request\n\n";
+
+			//Closes socket, then reopnes socket to listen for new connections
+
+			closesocket(acceptSocket);
+
+
 		}
-		else if (vRecv == 0)
-		{
-			cout << "Closing connection\n";
-			cleanup(acceptSocket);
-			return 0;
-		}
-		else
-		{
-			cerr << "ERROR: Failed to receive message\n";
-			cleanup(acceptSocket);
-			return 1;
-		}
+		requests++;
+		cout << "Number of requests = " << requests << "\n\n";
 	}
-
-	return 0;
 }
+
+	
+
 
 int getLocalVersion()
 {
