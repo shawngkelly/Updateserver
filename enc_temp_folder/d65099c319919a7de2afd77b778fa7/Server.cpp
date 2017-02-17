@@ -123,17 +123,10 @@ int main()
 
 		if (recvMessage == QUERY)
 		{
-			//Client has requested server version number. Program will return version number  and close accept socket.
-			//Will go back to top of loop and wait for next request.
-
 			cout << "Client is requesting server version.\n\n";
 			cout << "Sending version number now\n\n";
 			int iSend = send(acceptSocket, (char*)&serverVersion, sizeof((char*)&serverVersion), 0);
-			if (iSend == SOCKET_ERROR)
-			{
-				cerr << "ERROR: FAILED TO SEND UPDATE\n";
-				closesocket(acceptSocket);
-			}
+			
 
 			cout << "Closing socket--Waiting for new request\n\n";
 
@@ -141,12 +134,8 @@ int main()
 
 			closesocket(acceptSocket);
 		}
-
 		if (recvMessage == 2)
-		{	
-			//Client has requested updated version from server. Program will open file, store the data and send the data to 
-			//client. 
-
+		{
 			cout << "Client has outdate version.\n\n";
 			cout << "Sending  version " << serverVersion << " to client\n\n";
 			ifstream dataFile;
@@ -164,17 +153,14 @@ int main()
 			{
 				cout << "Data transmitted successfully\n\n";
 			}
-
 			cout << "Closing socket--Waiting for new request\n\n";
 
 			//Closes socket, then reopnes socket to listen for new connections
 
 			closesocket(acceptSocket);
 
+
 		}
-
-		//Counts number of requests made.
-
 		requests++;
 		cout << "Number of requests = " << requests << "\n\n";
 	}
