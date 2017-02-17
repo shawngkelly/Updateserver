@@ -117,6 +117,11 @@ int main()
 		cout << "Connected to client. \n\n";
 		cout << "\n\t--WAIT--\n\n";
 		int vRecv = recv(acceptSocket, (char*)&recvMessage, sizeof((char*)&recvMessage), 0);
+		if (vRecv == SOCKET_ERROR)
+		{
+			cerr << "ERROR: FAILED TO SEND UPDATE\n";
+			closesocket(acceptSocket);
+		}
 		
 		//Once message has receieved program will compare recvMessage to predefined constants
 		//to direct program to next step. 
